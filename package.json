@@ -17,6 +17,7 @@
     "@slidev/theme-default": "^0.25.0",
     "@stripe/stripe-js": "^3.0.5",
     "@supabase/supabase-js": "^2.39.3",
+    "@vueuse/motion": "^2.2.6",
     "nuxt": "^3.14.1592",
     "openai": "^4.28.0",
     "stripe": "^14.17.0",
