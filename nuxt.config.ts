@@ -2,7 +2,13 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@nuxt/icon', '@vueuse/motion/nuxt'],
+  modules: [
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/supabase',
+    '@nuxt/icon',
+    '@vueuse/motion/nuxt',
+    '@pinia/nuxt'
+  ],
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
@@ -13,9 +19,10 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    openaiApiKey: process.env.OPENAI_API_KEY,
+    openaiModel: 'gpt-4o-mini',
+    stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     public: {
-      openaiApiKey: process.env.OPENAI_API_KEY,
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY,
       motion: {
         directives: {
           'pop-bottom': {
@@ -36,6 +43,18 @@ export default defineNuxtConfig({
     private: {
       openaiApiKey: process.env.OPENAI_API_KEY,
       stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+    }
+  },
+  nitro: {
+    storage: {
+      presentations: {
+        driver: 'fs',
+        base: './storage/presentations'
+      }
+    },
+    // Add static file serving for presentations
+    routeRules: {
+      '/presentations/**': { static: true, prerender: true }
     }
   },
   app: {

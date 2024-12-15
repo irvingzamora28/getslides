@@ -8,6 +8,16 @@
       </p>
     </div>
 
+     <!-- Generate Presentation Button -->
+     <div class="flex justify-center">
+      <NuxtLink 
+        to="/generate-presentation" 
+        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 transition"
+      >
+        Generate Presentation
+      </NuxtLink>
+    </div>
+
     <!-- Stats Section -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-lg rounded-xl">
