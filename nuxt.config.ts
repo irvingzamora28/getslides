@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@nuxt/icon', '@vueuse/motion'],
+  modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@nuxt/icon', '@vueuse/motion/nuxt'],
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
@@ -16,6 +16,22 @@ export default defineNuxtConfig({
     public: {
       openaiApiKey: process.env.OPENAI_API_KEY,
       stripeSecretKey: process.env.STRIPE_SECRET_KEY,
+      motion: {
+        directives: {
+          'pop-bottom': {
+            initial: {
+              scale: 0,
+              opacity: 0,
+              y: 100,
+            },
+            visibleOnce: {
+              scale: 1,
+              opacity: 1,
+              y: 0,
+            }
+          }
+        }
+      }
     },
     private: {
       openaiApiKey: process.env.OPENAI_API_KEY,
