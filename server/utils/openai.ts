@@ -49,6 +49,7 @@ export async function generateSlideContent(prompt: string) {
         6. Add image placeholders if needed
         7. Format as proper Slidev markdown
         8. Do not wrap the content in markdown code blocks
+        9. Do not use image placeholders
         `
       },
       {
