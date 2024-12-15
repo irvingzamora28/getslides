@@ -29,7 +29,7 @@
         >
           <span v-if="store.loading" class="inline-block animate-spin mr-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 0l1.5-1.5M12 8l-1.5-1.5m-6.5 7h4m0 0l-1.5 1.5M4 16l1.5-1.5M20 12h-4m0 0l1.5-1.5M16 12l1.5 1.5m-7-6.5V4m0 4l-1.5-1.5M12 8l1.5 1.5"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
           </span>
           Generate Presentation
@@ -47,8 +47,8 @@
           class="px-3 py-2 text-gray-700 bg-gray-100 rounded shadow hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:focus:ring-offset-gray-800"
         >
           <span v-if="store.loading" class="inline-block animate-spin mr-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h4m0 0l-1.5-1.5M8 12l-1.5 1.5m7-6.5V4m0 4l-1.5-1.5M12 8l1.5 1.5M20 12h-4m0 0l1.5-1.5M16 12l1.5 1.5M12 16v4m0-4l-1.5 1.5M12 16l1.5-1.5M12 4v4"></path>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
             </svg>
           </span>
           Refresh
@@ -56,13 +56,13 @@
       </div>
 
       <div v-if="store.loading" class="py-8 text-center">
-        <svg class="w-8 h-8 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h4m0 0l-1.5-1.5M8 12l-1.5 1.5M12 4v4m0 4l-1.5-1.5M12 8l1.5 1.5M20 12h-4m0 0l1.5-1.5M16 12l1.5 1.5M12 16v4m0-4l-1.5 1.5M12 16l1.5-1.5"></path>
+        <svg class="mx-auto w-8 h-8 text-gray-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
         </svg>
-        <p class="mt-2">Loading presentations...</p>
+        <p class="mt-2 text-gray-500">Loading presentations...</p>
       </div>
 
-      <div v-else-if="store.presentations.length === 0" class="py-8 text-center">
+      <div v-else-if="!store.presentations?.length" class="py-8 text-center">
         <p class="text-gray-500 dark:text-gray-400">No presentations yet. Create your first one!</p>
       </div>
 
@@ -81,7 +81,7 @@
               </p>
             </div>
             <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12m0 0a3 3 0 11-6 0 3 3 0 016 0zm0 0a9 9 0 01-9 9m9-9a9 9 0 019 9"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </div>
         </div>
@@ -91,30 +91,38 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { usePresentationsStore } from '~/stores/presentations'
 
 const store = usePresentationsStore()
 const prompt = ref('')
 
 // Fetch presentations when the page is mounted
-onMounted(() => {
-  store.fetchPresentations()
-})
+// onMounted(() => {
+//   store.fetchPresentations()
+// })
 
 async function generatePresentation() {
   if (!prompt.value.trim()) return
 
   try {
-    await store.generatePresentation(prompt.value)
+    const presentation = await store.generatePresentation(prompt.value)
+    console.log('Generated Presentation:', presentation);
+    
     prompt.value = '' // Clear prompt after successful generation
-    navigateTo(`/presentation/${store.currentPresentation?.id}`)
+    
+    // if (presentation?.id) {
+    //   await navigateTo(`/presentation/${presentation.id}`, { replace: true })
+    // } else {
+    //   console.error('No presentation ID received after generation')
+    // }
   } catch (error: any) {
-    console.error('Presentation generation failed', error)
+    console.error('Presentation generation failed:', error)
   }
 }
 
 function viewPresentation(presentation: any) {
   store.setCurrentPresentation(presentation)
-  navigateTo(`/presentation/${presentation.id}`)
+  navigateTo(`/presentation/${presentation.id}`, { replace: true })
 }
 </script>
