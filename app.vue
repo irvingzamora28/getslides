@@ -57,7 +57,7 @@
       </div>
     </header>
 
-    <main>
+    <main class="flex-grow">
       <NuxtPage class="animate-fadeIn" />
     </main>
 
@@ -119,5 +119,4 @@ async function handleLogout() {
 .animate-fadeIn {
   animation: fadeIn 0.5s ease-out;
 }
-
 </style>
