@@ -7,9 +7,10 @@
             to="/" 
             class="flex items-center space-x-2 group transition duration-300"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-600 dark:text-gray-200 group-hover:rotate-6 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <Icon 
+            name="heroicons:presentation-chart-line" 
+            class="h-8 w-8 text-indigo-600 dark:text-gray-200 group-hover:rotate-6 group-hover:text-indigo-800 transition"
+          />
             <span class="text-2xl font-bold text-indigo-600 dark:text-gray-200 group-hover:text-indigo-800 transition">
               GetSlides
             </span>
@@ -64,9 +65,10 @@
     <footer class="bg-white border-t border-gray-100 mt-auto dark:bg-gray-800">
       <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
         <div class="flex items-center space-x-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <Icon 
+            name="heroicons:presentation-chart-line" 
+            class="h-8 w-8 text-indigo-600 dark:text-gray-200"
+          />
           <span class="text-lg font-semibold text-indigo-600 dark:text-gray-200">GetSlides</span>
         </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 text-center md:text-right">
