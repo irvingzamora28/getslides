@@ -25,16 +25,15 @@ export default defineEventHandler(async (event) => {
       prompt
     }
 
-    // Save to storage
-    const storage = useStorage('presentations')
-    await storage.setItem(`${presentation.id}.json`, presentation)
-
     // Generate Slidev presentation
     const slidevResult = await generateSlidevPresentation(presentation.id, content)
     
     // Update presentation with Slidev details
     presentation.slidevPath = slidevResult.slidesPath
     presentation.previewUrl = slidevResult.previewUrl
+
+    // Save to storage after successful generation
+    const storage = useStorage('presentations')
     await storage.setItem(`${presentation.id}.json`, presentation)
 
     return presentation

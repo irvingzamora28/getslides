@@ -41,7 +41,9 @@ export default defineEventHandler(async (event) => {
 
     // Extract the requested file from the path
     const requestedFile = requestPath.replace(`/presentations/${id}/`, '')
-    const fullFilePath = join('public', requestedFile)
+    console.log('Requested File:', requestedFile);
+    
+    const fullFilePath = join('public', requestedFile, 'index.html')
     console.log('Full File Path:', fullFilePath)
 
     // Check if file exists
@@ -70,10 +72,11 @@ export default defineEventHandler(async (event) => {
       'json': 'application/json'
     }
     const contentType = contentTypes[ext || ''] || 'application/octet-stream'
-
+    console.log('Content-Type:', contentType)
     event.node.res.setHeader('Content-Type', contentType)
     fileStream.pipe(event.node.res)
-
+    console.log('File Stream:', fileStream);
+    
     return new Promise((resolve, reject) => {
       fileStream.on('end', resolve)
       fileStream.on('error', reject)
