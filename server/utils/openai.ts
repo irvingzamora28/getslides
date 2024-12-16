@@ -34,6 +34,8 @@ function cleanMarkdownContent(content: string): string {
 }
 
 export async function generateSlideContent(prompt: string) {
+  console.log('Inside openai.ts@generateSlideContent - Before actually Generating slide content...');
+  
   const completion = await openai.chat.completions.create({
     model: useRuntimeConfig().openaiModel,
     messages: [
@@ -62,6 +64,8 @@ export async function generateSlideContent(prompt: string) {
   })
 
   const content = completion.choices[0].message.content
+  console.log('Inside openai.ts@generateSlideContent - After Generating slide content and before returning it...');
+  console.log('Generated slide content:', content);
   if (!content) return ''
   
   return cleanMarkdownContent(content)

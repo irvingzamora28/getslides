@@ -15,7 +15,8 @@ export default defineEventHandler(async (event) => {
 
     const jobId = uuidv4(); // Generate a unique job ID
     jobs[jobId] = { status: 'Processing' }; // Initialize job status
-
+    console.log('generate.post.ts - Before Start Presentation Generation - Job ID:', jobId);
+    
     // Start the presentation generation process
     startPresentationGeneration(prompt, jobId); // Pass jobId to track status
 
@@ -31,6 +32,7 @@ export default defineEventHandler(async (event) => {
 // Function to start the generation process
 async function startPresentationGeneration(prompt, jobId) {
   try {
+    console.log('Starting presentation generation... (PROMPT: ', prompt, ')');
     // Generate slide content
     const content = await generateSlideContent(prompt)
     console.log('Generated slide content:', content);
