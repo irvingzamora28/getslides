@@ -12,7 +12,7 @@ export async function generateSlidevPresentation(id: string, content: string) {
   const presentationDir = join(process.cwd(), 'storage', 'presentations', id);
   console.log('Presentation directory:', presentationDir);
 
-  const distDir = join(presentationDir, 'dist');
+  const distDir = join(process.cwd(), 'tmp', 'dist', id);
   const publicDistDir = join(process.cwd(), 'public', 'presentations', id);
 
   console.log("Current directory:", process.cwd());
@@ -38,7 +38,7 @@ export async function generateSlidevPresentation(id: string, content: string) {
   }
 
   // Create slides.md file
-  const slidesPath = join(presentationDir, 'slides.md');
+  const slidesPath = join(process.cwd(), 'tmp', `${id}.md`);
   await writeFile(slidesPath, content);
   console.log('Written slides.md file at:', slidesPath);
 

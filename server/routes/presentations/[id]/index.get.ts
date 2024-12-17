@@ -15,6 +15,8 @@ export default defineEventHandler(async (event) => {
 
     // Construct full path to the file
     const requestPath = getRequestPath(event)
+    console.log("___________ INDEX ___________");
+    
     console.log('Requested Path:', requestPath)
 
     // Check if presentation exists
@@ -43,7 +45,7 @@ export default defineEventHandler(async (event) => {
     const requestedFile = requestPath.replace(`/presentations/${id}/`, '')
     console.log('Requested File:', requestedFile);
     
-    const fullFilePath = join('public', requestedFile, 'index.html')
+    const fullFilePath = join('public', requestedFile)
     console.log('Full File Path:', fullFilePath)
 
     // Check if file exists
