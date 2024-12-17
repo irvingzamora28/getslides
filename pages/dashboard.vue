@@ -1,22 +1,31 @@
 <template>
   <div class="space-y-6 px-6 py-8 md:px-24 dark:text-gray-100 dark:bg-gray-900" style="min-height: calc(100vh - 9rem);">
-    <!-- Welcome Section -->
-    <div class="hidden md:block bg-white dark:bg-gray-800 shadow-lg rounded-xl p-6">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Welcome back!</h1>
-      <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">
-        Here's an overview of your presentations
-      </p>
-    </div>
 
-     <!-- Generate Presentation Button -->
-     <div class="flex justify-center">
-      <NuxtLink 
-        to="/generate-presentation" 
-        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 transition"
+    <!-- Generate Presentation Form -->
+    <form @submit.prevent="generatePresentation" class="space-y-4">
+      <textarea v-model="prompt" placeholder="What would you like your presentation to be about?" class="w-full p-2 border rounded" required></textarea>
+      <button 
+        type="submit" 
+        :disabled="isGenerating || !prompt.trim()"
+        class="inline-flex items-center px-4 py-2 rounded-md text-white font-semibold transition-all duration-200"
+        :class="{
+          'bg-indigo-600 hover:bg-indigo-700': !isGenerating && prompt.trim(),
+          'bg-gray-400 cursor-not-allowed': isGenerating || !prompt.trim()
+        }"
       >
-        Generate Presentation
-      </NuxtLink>
-    </div>
+        <span v-if="!isGenerating">Generate Presentation</span>
+        <span v-else>Generating...</span>
+      </button>
+
+      <!-- Generation Status -->
+      <div v-if="generationStatus || error" class="mt-4">
+        <div v-if="generationStatus" class="flex items-center space-x-3 text-gray-700">
+          <div v-if="isGenerating" class="animate-spin rounded-full h-4 w-4 border-2 border-indigo-500 border-t-transparent"></div>
+          <span>{{ generationStatus }}</span>
+        </div>
+        <div v-if="error" class="text-red-500 whitespace-pre-line">{{ error }}</div>
+      </div>
+    </form>
 
     <!-- Stats Section -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -64,45 +73,106 @@
       </div>
     </div>
 
-    <!-- Recent Presentations Section -->
-    <div class="bg-white dark:bg-gray-800 shadow-lg rounded-xl">
-      <div class="p-6">
-        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Presentations</h2>
-        <div class="mt-6 divide-y divide-gray-200 dark:divide-gray-700">
-          <div 
-            v-for="(presentation, index) in recentPresentations" 
-            :key="index" 
-            class="py-4 flex items-center justify-between"
-          >
-            <div>
-              <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                {{ presentation.title }}
-              </p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">
-                Created {{ presentation.date }}
-              </p>
-            </div>
-            <button 
-              class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition"
-            >
-              View
-            </button>
-          </div>
-        </div>
+    <!-- List of Presentations -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold">Your Presentations</h2>
+      <div v-if="store.loading" class="flex justify-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-2 border-indigo-500 border-t-transparent"></div>
       </div>
+      <ul v-else class="space-y-2">
+        <li v-for="presentation in store.presentations" :key="presentation.id" class="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
+          <h3 class="font-bold">{{ presentation.title }}</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Created {{ new Date(presentation.createdAt).toLocaleString() }}</p>
+          <button 
+            @click="navigateTo(`/presentation/${presentation.id}`)"
+            class="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+          >
+            View Presentation
+          </button>
+        </li>
+      </ul>
     </div>
   </div>
 </template>
 
 <script setup>
-definePageMeta({
-  middleware: 'auth',
-})
+import { ref } from 'vue'
+import { usePresentationsStore } from '~/stores/presentations'
 
-const recentPresentations = ref([
-  { title: 'Q4 2024 Business Review', date: '2 days ago' },
-  { title: 'Product Launch Strategy', date: '5 days ago' },
-  { title: 'Team Updates', date: '1 week ago' },
-  { title: 'Market Analysis', date: '2 weeks ago' },
-])
+const store = usePresentationsStore()
+const prompt = ref('')
+const isGenerating = ref(false)
+const generationStatus = ref('')
+const error = ref('')
+
+const generatePresentation = async () => {
+  if (!prompt.value.trim()) return
+
+  try {
+    isGenerating.value = true
+    generationStatus.value = 'Starting presentation generation...'
+    error.value = ''
+
+    const response = await store.generatePresentation(prompt.value)
+    console.log('Generated presentation:', response)
+    const jobId = response.jobId
+
+    // Start polling for completion
+    const interval = setInterval(async () => {
+      try {
+        const statusResponse = await fetch(`/api/slides/status/${jobId}`)
+        const statusData = await statusResponse.json()
+        console.log('Status response:', statusData)
+
+        if (statusData.status === 'Completed') {
+          clearInterval(interval)
+          generationStatus.value = 'Presentation generated successfully!'
+          isGenerating.value = false
+          
+          // Show success message before navigation
+          setTimeout(async () => {
+            if (statusData.presentationId) {
+              await navigateTo(`/presentation/${statusData.presentationId}`)
+            }
+          }, 1500) // Give user time to see the success message
+        } else if (statusData.status === 'Failed') {
+          clearInterval(interval)
+          isGenerating.value = false
+          error.value = 'Failed to generate presentation. This could be due to:';
+          generationStatus.value = ''
+          
+          // Add retry button and error details
+          const errorDetails = `
+            • The content might be too complex
+            • There might be an issue with the server
+            • The AI model might need different input
+          `;
+          
+          error.value = `${error.value}\n${errorDetails}\n\nPlease try again with a different prompt or try later.`;
+        } else {
+          generationStatus.value = 'Generating your presentation... This may take a minute.'
+        }
+      } catch (error) {
+        console.error('Error checking status:', error)
+        error.value = 'Error checking generation status. Please try again.'
+        isGenerating.value = false
+        clearInterval(interval)
+      }
+    }, 5000) // Poll every 5 seconds
+
+  } catch (error) {
+    console.error('Presentation generation failed:', error)
+    error.value = 'Failed to generate presentation. Please try again.'
+    isGenerating.value = false
+  }
+}
+
+// Fetch presentations when the page is mounted
+onMounted(() => {
+  store.fetchPresentations()
+})
 </script>
+
+<style scoped>
+/* Add any styles you need */
+</style>

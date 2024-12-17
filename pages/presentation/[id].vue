@@ -39,7 +39,7 @@
                 Start Presentation
               </button>
               <button
-                @click="navigateTo('/generate-presentation')"
+                @click="navigateTo('/dashboard')"
                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               >
                 Back to List
@@ -91,7 +91,7 @@
           The presentation you're looking for doesn't exist or has been removed.
         </p>
         <button
-          @click="navigateTo('/generate-presentation')"
+          @click="navigateTo('/dashboard')"
           class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500 transition-colors"
         >
           Back to List
