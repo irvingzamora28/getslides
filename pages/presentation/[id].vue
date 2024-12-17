@@ -49,6 +49,13 @@
           <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
             Created {{ new Date(presentation.createdAt).toLocaleString() }}
           </p>
+          <span class="block p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <b>Nota:</b> Aqui se supone que vas a poder editar tu presentación y ver los cambios en tiempo real<br>
+            <b>Nota:</b> Vas a poder agregar temas (estilos de diseño de la presentación)<br> 
+            <b>Nota:</b>Vas a poder seleccionar un slide y pedirle a la IA que modifique el contenido.<br>
+            Por ejemplo: "Incluye otros 3 ejemplos del tema" <br>
+            Por ejemplo: "Amplia el contenido del slide actual"
+          </span>
         </div>
 
         <!-- Content and Preview Grid -->
