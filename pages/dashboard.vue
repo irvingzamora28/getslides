@@ -244,10 +244,26 @@
               <button 
                 @click="exportToPdf(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
-                :disabled="isExporting[presentation.id]"
+                :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
               >
                 <Icon name="material-symbols:download" class="mr-1" />
-                {{ isExporting[presentation.id] ? 'Exporting...' : 'PDF' }}
+                {{ isExporting.pdf ? 'Exporting...' : 'PDF' }}
+              </button>
+              <button 
+                @click="exportToPptx(presentation.id, presentation.title)"
+                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+                :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
+              >
+                <Icon name="material-symbols:download" class="mr-1" />
+                {{ isExporting.pptx ? 'Exporting...' : 'PPTX' }}
+              </button>
+              <button 
+                @click="exportToPng(presentation.id, presentation.title)"
+                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+                :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
+              >
+                <Icon name="material-symbols:download" class="mr-1" />
+                {{ isExporting.png ? 'Exporting...' : 'PNG' }}
               </button>
               <button 
                 @click="navigateTo(`/presentation/${presentation.id}`)"
@@ -286,7 +302,7 @@ const generationStatus = ref('')
 const error = ref('')
 const generationProgress = ref(0)
 const success = ref(false)
-const isExporting = ref({})  // Track export status for each presentation
+const isExporting = ref({ pdf: false, pptx: false, png: false })  // Track export status for each format
 
 const generatePresentation = async () => {
   if (!prompt.value.trim()) return
@@ -353,20 +369,19 @@ const resetError = () => {
 }
 
 const exportToPdf = async (id, title) => {
-  if (isExporting.value[id]) {
-    toast.info('Export already in progress')
+  if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
+    toast.info('An export is already in progress')
     return
   }
 
+  isExporting.value.pdf = true
   try {
-    isExporting.value[id] = true
     console.log('Exporting PDF for presentation ID:', id)
     
-    // Start the export process
     const response = await fetch(`/api/slides/export/${id}`, {
       method: 'POST'
     })
-    
+
     if (!response.ok) {
       throw new Error('Failed to start PDF export')
     }
@@ -380,7 +395,6 @@ const exportToPdf = async (id, title) => {
       const statusData = await statusResponse.json()
       
       if (statusData.status === 'Completed') {
-        // Download the PDF
         const pdfResponse = await fetch(`/api/slides/export/process/${jobId}`)
         if (!pdfResponse.ok) {
           throw new Error('Failed to download PDF')
@@ -396,7 +410,7 @@ const exportToPdf = async (id, title) => {
         document.body.removeChild(link)
         window.URL.revokeObjectURL(url)
 
-        isExporting.value[id] = false
+        isExporting.value.pdf = false
         toast.success('PDF exported successfully')
         return true
       } else if (statusData.status === 'Failed') {
@@ -406,7 +420,6 @@ const exportToPdf = async (id, title) => {
       return false
     }
 
-    // Poll every 2 seconds
     const interval = setInterval(async () => {
       try {
         const done = await checkStatus()
@@ -415,7 +428,7 @@ const exportToPdf = async (id, title) => {
         }
       } catch (error) {
         clearInterval(interval)
-        isExporting.value[id] = false
+        isExporting.value.pdf = false
         console.error('Error checking export status:', error)
         toast.error(error.message || 'Failed to export PDF')
       }
@@ -423,8 +436,153 @@ const exportToPdf = async (id, title) => {
 
   } catch (error) {
     console.error('Error exporting PDF:', error)
-    isExporting.value[id] = false
+    isExporting.value.pdf = false
     toast.error(error.message || 'Failed to export PDF')
+  }
+}
+
+const exportToPptx = async (id, title) => {
+  if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
+    toast.info('An export is already in progress')
+    return
+  }
+
+  isExporting.value.pptx = true
+  try {
+    console.log('Exporting PPTX for presentation ID:', id)
+    
+    const response = await fetch(`/api/slides/export/pptx/${id}`, {
+      method: 'POST'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to start PPTX export')
+    }
+
+    const { jobId } = await response.json()
+    console.log('PPTX export job started:', jobId)
+
+    // Poll for status
+    const checkStatus = async () => {
+      const statusResponse = await fetch(`/api/slides/export-status/${jobId}`)
+      const statusData = await statusResponse.json()
+      
+      if (statusData.status === 'Completed') {
+        const pptxResponse = await fetch(`/api/slides/export/process/${jobId}`)
+        if (!pptxResponse.ok) {
+          throw new Error('Failed to download PPTX')
+        }
+
+        const blob = await pptxResponse.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${title}.pptx`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        isExporting.value.pptx = false
+        toast.success('PPTX exported successfully')
+        return true
+      } else if (statusData.status === 'Failed') {
+        throw new Error(statusData.error || 'Export failed')
+      }
+
+      return false
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const done = await checkStatus()
+        if (done) {
+          clearInterval(interval)
+        }
+      } catch (error) {
+        clearInterval(interval)
+        isExporting.value.pptx = false
+        console.error('Error checking PPTX export status:', error)
+        toast.error(error.message || 'Failed to export PPTX')
+      }
+    }, 2000)
+
+  } catch (error) {
+    console.error('Error exporting PPTX:', error)
+    isExporting.value.pptx = false
+    toast.error(error.message || 'Failed to export PPTX')
+  }
+}
+
+const exportToPng = async (id, title) => {
+  if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
+    toast.info('An export is already in progress')
+    return
+  }
+
+  isExporting.value.png = true
+  try {
+    console.log('Exporting PNG for presentation ID:', id)
+    
+    const response = await fetch(`/api/slides/export/png/${id}`, {
+      method: 'POST'
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to start PNG export')
+    }
+
+    const { jobId } = await response.json()
+    console.log('PNG export job started:', jobId)
+
+    const checkStatus = async () => {
+      const statusResponse = await fetch(`/api/slides/export-status/${jobId}`)
+      const statusData = await statusResponse.json()
+      
+      if (statusData.status === 'Completed') {
+        const pngResponse = await fetch(`/api/slides/export/process/${jobId}`)
+        if (!pngResponse.ok) {
+          throw new Error('Failed to download PNG')
+        }
+
+        const blob = await pngResponse.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${title}.png`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        isExporting.value.png = false
+        toast.success('PNG exported successfully')
+        return true
+      } else if (statusData.status === 'Failed') {
+        throw new Error(statusData.error || 'Export failed')
+      }
+
+      return false
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const done = await checkStatus()
+        if (done) {
+          clearInterval(interval)
+        }
+      } catch (error) {
+        clearInterval(interval)
+        isExporting.value.png = false
+        console.error('Error checking PNG export status:', error)
+        toast.error(error.message || 'Failed to export PNG')
+      }
+    }, 2000)
+
+  } catch (error) {
+    console.error('Error exporting PNG:', error)
+    isExporting.value.png = false
+    toast.error(error.message || 'Failed to export PNG')
   }
 }
 
