@@ -244,9 +244,10 @@
               <button 
                 @click="exportToPdf(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+                :disabled="isExporting[presentation.id]"
               >
                 <Icon name="material-symbols:download" class="mr-1" />
-                PDF
+                {{ isExporting[presentation.id] ? 'Exporting...' : 'PDF' }}
               </button>
               <button 
                 @click="navigateTo(`/presentation/${presentation.id}`)"
@@ -285,6 +286,7 @@ const generationStatus = ref('')
 const error = ref('')
 const generationProgress = ref(0)
 const success = ref(false)
+const isExporting = ref({})  // Track export status for each presentation
 
 const generatePresentation = async () => {
   if (!prompt.value.trim()) return
@@ -351,41 +353,78 @@ const resetError = () => {
 }
 
 const exportToPdf = async (id, title) => {
+  if (isExporting.value[id]) {
+    toast.info('Export already in progress')
+    return
+  }
+
   try {
-    console.log('Exporting PDF for presentation ID:', id);
+    isExporting.value[id] = true
+    console.log('Exporting PDF for presentation ID:', id)
     
+    // Start the export process
     const response = await fetch(`/api/slides/export/${id}`, {
       method: 'POST'
     })
-    console.log('PDF export response:', response);
     
     if (!response.ok) {
-      throw new Error('Failed to export PDF')
+      throw new Error('Failed to start PDF export')
     }
 
-    // Get the PDF blob from the response
-    const blob = await response.blob()
-    
-    // Create a URL for the blob
-    const url = window.URL.createObjectURL(blob)
-    
-    // Create a temporary link element
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${title}.pdf`
-    
-    // Append to the document, click it, and remove it
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    // Clean up the URL object
-    window.URL.revokeObjectURL(url)
-    
-    toast.success('PDF exported successfully')
+    const { jobId } = await response.json()
+    console.log('Export job started:', jobId)
+
+    // Poll for status
+    const checkStatus = async () => {
+      const statusResponse = await fetch(`/api/slides/export-status/${jobId}`)
+      const statusData = await statusResponse.json()
+      
+      if (statusData.status === 'Completed') {
+        // Download the PDF
+        const pdfResponse = await fetch(`/api/slides/export/process/${jobId}`)
+        if (!pdfResponse.ok) {
+          throw new Error('Failed to download PDF')
+        }
+
+        const blob = await pdfResponse.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${title}.pdf`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+
+        isExporting.value[id] = false
+        toast.success('PDF exported successfully')
+        return true
+      } else if (statusData.status === 'Failed') {
+        throw new Error(statusData.error || 'Export failed')
+      }
+
+      return false
+    }
+
+    // Poll every 2 seconds
+    const interval = setInterval(async () => {
+      try {
+        const done = await checkStatus()
+        if (done) {
+          clearInterval(interval)
+        }
+      } catch (error) {
+        clearInterval(interval)
+        isExporting.value[id] = false
+        console.error('Error checking export status:', error)
+        toast.error(error.message || 'Failed to export PDF')
+      }
+    }, 2000)
+
   } catch (error) {
     console.error('Error exporting PDF:', error)
-    toast.error('Failed to export PDF')
+    isExporting.value[id] = false
+    toast.error(error.message || 'Failed to export PDF')
   }
 }
 
