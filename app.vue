@@ -59,6 +59,7 @@
     </header>
 
     <main class="flex-grow">
+      <Toast />
       <NuxtPage class="animate-fadeIn" />
     </main>
 
