@@ -240,13 +240,22 @@
                 Created {{ new Date(presentation.createdAt).toLocaleString() }}
               </p>
             </div>
-            <button 
-              @click="navigateTo(`/presentation/${presentation.id}`)"
-              class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center space-x-1 hover:underline"
-            >
-              <Icon name="material-symbols:visibility" class="mr-1" />
-              View
-            </button>
+            <div class="flex items-center space-x-2">
+              <button 
+                @click="exportToPdf(presentation.id, presentation.title)"
+                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+              >
+                <Icon name="material-symbols:download" class="mr-1" />
+                PDF
+              </button>
+              <button 
+                @click="navigateTo(`/presentation/${presentation.id}`)"
+                class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center space-x-1 hover:underline"
+              >
+                <Icon name="material-symbols:visibility" class="mr-1" />
+                View
+              </button>
+            </div>
           </li>
         </ul>
         <div v-else class="text-center py-8 bg-gray-100 dark:bg-gray-800 rounded-lg">
@@ -266,7 +275,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { usePresentationsStore } from '~/stores/presentations'
+import { useToast } from 'vue-toastification'
 
+const toast = useToast()
 const store = usePresentationsStore()
 const prompt = ref('')
 const isGenerating = ref(false)
@@ -337,6 +348,45 @@ const generatePresentation = async () => {
 
 const resetError = () => {
   error.value = ''
+}
+
+const exportToPdf = async (id, title) => {
+  try {
+    console.log('Exporting PDF for presentation ID:', id);
+    
+    const response = await fetch(`/api/slides/export/${id}`, {
+      method: 'POST'
+    })
+    console.log('PDF export response:', response);
+    
+    if (!response.ok) {
+      throw new Error('Failed to export PDF')
+    }
+
+    // Get the PDF blob from the response
+    const blob = await response.blob()
+    
+    // Create a URL for the blob
+    const url = window.URL.createObjectURL(blob)
+    
+    // Create a temporary link element
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${title}.pdf`
+    
+    // Append to the document, click it, and remove it
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Clean up the URL object
+    window.URL.revokeObjectURL(url)
+    
+    toast.success('PDF exported successfully')
+  } catch (error) {
+    console.error('Error exporting PDF:', error)
+    toast.error('Failed to export PDF')
+  }
 }
 
 onMounted(() => {
