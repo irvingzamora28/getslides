@@ -7,6 +7,9 @@
 dist
 .vercel
 
+# This is where presentations are generated
+storage/presentations
+# This is where presentations are served
 public/presentations
 
 
