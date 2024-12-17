@@ -4,6 +4,8 @@ import { join } from 'path'
 import { useStorage } from '#imports'
 import { v4 as uuidv4 } from 'uuid'
 import { exportJobs } from '../../export-status/[jobId].get'
+import archiver from 'archiver'
+import { createWriteStream } from 'fs'
 
 async function startPngExportProcess(jobId: string, id: string) {
   try {
@@ -15,18 +17,20 @@ async function startPngExportProcess(jobId: string, id: string) {
 
     const presentationDir = join(process.cwd(), 'storage', 'presentations', id)
     const slidesPath = join(presentationDir, 'slides.md')
-    const outputPath = join(presentationDir, 'presentation.png')
+    const outputDir = presentationDir;
+    const outputZipPath = join(outputDir, 'presentation.zip');
 
     console.log('Exporting presentation to PNG...')
     console.log('Slides path:', slidesPath)
-    console.log('Output path:', outputPath)
+    console.log('Output directory:', outputDir)
 
+    // Export to PNG using slidev
     const result = await execa('npx', [
       'slidev',
       'export',
       slidesPath,
       '--output',
-      outputPath,
+      outputDir,
       '--format',
       'png'
     ], {
@@ -43,9 +47,23 @@ async function startPngExportProcess(jobId: string, id: string) {
       console.error('Slidev export stderr:', result.stderr)
     }
 
-    exportJobs[jobId].status = 'Completed'
-    exportJobs[jobId].outputPath = outputPath
-    exportJobs[jobId].filename = `${presentation.title}.png`
+    // Create a zip file containing the PNGs
+    const output = createWriteStream(outputZipPath);
+    const archive = archiver('zip', { zlib: { level: 9 } });
+
+    output.on('close', () => {
+      console.log(`Created ZIP file: ${outputZipPath} (${archive.pointer()} total bytes)`);
+    });
+
+    archive.pipe(output);
+
+    // Append PNG files to the archive
+    archive.directory(outputDir + '/', false);
+    await archive.finalize();
+
+    exportJobs[jobId].status = 'Completed';
+    exportJobs[jobId].outputPath = outputZipPath;
+    exportJobs[jobId].filename = `${presentation.title}.zip`;
   } catch (error: any) {
     console.error('PNG export error:', error)
     exportJobs[jobId] = { 
