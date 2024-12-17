@@ -71,7 +71,7 @@
       <!-- Status Modal -->
       <Teleport to="body">
         <div 
-          v-if="isGenerating || error"
+          v-if="isGenerating || success || error"
           class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
           v-motion
           :initial="{ opacity: 0 }"
@@ -84,80 +84,101 @@
             :initial="{ scale: 0.9, opacity: 0 }"
             :enter="{ scale: 1, opacity: 1, transition: { duration: 400 } }"
           >
-            <div v-if="isGenerating" class="space-y-6">
-                <!-- Animated Loading Illustration -->
-                <div class="flex justify-center">
-                    <div class="relative w-48 h-48">
-                        <svg class="absolute inset-0 animate-spin" viewBox="0 0 100 100">
-                            <circle 
-                                cx="50" 
-                                cy="50" 
-                                r="45" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                stroke-width="10" 
-                                stroke-dasharray="280" 
-                                stroke-dashoffset="200" 
-                                class="text-indigo-200 dark:text-indigo-700"
-                            />
-                            <circle 
-                                cx="50" 
-                                cy="50" 
-                                r="45" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                stroke-width="10" 
-                                stroke-dasharray="280" 
-                                stroke-dashoffset="280" 
-                                class="text-indigo-600 dark:text-indigo-400 animate-spin-slow"
-                            />
-                        </svg>
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <Icon 
-                                name="material-symbols:rocket-launch" 
-                                class="text-6xl text-indigo-600 dark:text-indigo-400 animate-bounce"
-                            />
-                        </div>
+            <div v-if="isGenerating || success || error" class="space-y-6">
+                <!-- Success State -->
+                <div v-if="success" class="space-y-6">
+                    <div class="flex justify-center">
+                        <Icon 
+                            name="material-symbols:check-circle" 
+                            class="text-6xl text-green-500 animate-bounce"
+                        />
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                            Success!
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-300">
+                            {{ generationStatus }}
+                        </p>
                     </div>
                 </div>
-                
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                        Generating Your Presentation
+
+                <!-- Loading State -->
+                <div v-else-if="isGenerating">
+                    <!-- Animated Loading Illustration -->
+                    <div class="flex justify-center">
+                        <div class="relative w-48 h-48">
+                            <svg class="absolute inset-0 animate-spin" viewBox="0 0 100 100">
+                                <circle 
+                                    cx="50" 
+                                    cy="50" 
+                                    r="45" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    stroke-width="10" 
+                                    stroke-dasharray="280" 
+                                    stroke-dashoffset="200" 
+                                    class="text-indigo-200 dark:text-indigo-700"
+                                />
+                                <circle 
+                                    cx="50" 
+                                    cy="50" 
+                                    r="45" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    stroke-width="10" 
+                                    stroke-dasharray="280" 
+                                    stroke-dashoffset="280" 
+                                    class="text-indigo-600 dark:text-indigo-400 animate-spin-slow"
+                                />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <Icon 
+                                    name="material-symbols:rocket-launch" 
+                                    class="text-6xl text-indigo-600 dark:text-indigo-400 animate-bounce"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                            Generating Your Presentation
+                        </h3>
+                        <p class="text-gray-600 dark:text-gray-300">
+                            {{ generationStatus || 'Crafting your AI-powered slides...' }}
+                        </p>
+                    </div>
+
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                        <div 
+                            class="bg-indigo-600 h-2.5 rounded-full animate-pulse"
+                            :style="{ width: `${generationProgress}%` }"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div v-else-if="error" class="space-y-4">
+                    <div class="flex justify-center mb-4">
+                        <Icon 
+                            name="material-symbols:error-outline" 
+                            class="text-6xl text-red-500 animate-shake"
+                        />
+                    </div>
+                    <h3 class="text-xl font-bold text-red-600">
+                        Presentation Generation Failed
                     </h3>
-                    <p class="text-gray-600 dark:text-gray-300">
-                        {{ generationStatus || 'Crafting your AI-powered slides...' }}
+                    <p class="text-gray-600 dark:text-gray-300 mb-4">
+                        {{ error }}
                     </p>
+                    <button 
+                        @click="resetError"
+                        class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg transition-colors"
+                    >
+                        Try Again
+                    </button>
                 </div>
-
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div 
-                        class="bg-indigo-600 h-2.5 rounded-full animate-pulse"
-                        :style="{ width: `${generationProgress}%` }"
-                    ></div>
-                </div>
-            </div>
-
-            <!-- Error State -->
-            <div v-else-if="error" class="space-y-4">
-                <div class="flex justify-center mb-4">
-                    <Icon 
-                        name="material-symbols:error-outline" 
-                        class="text-6xl text-red-500 animate-shake"
-                    />
-                </div>
-                <h3 class="text-xl font-bold text-red-600">
-                    Presentation Generation Failed
-                </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-4">
-                    {{ error }}
-                </p>
-                <button 
-                    @click="resetError"
-                    class="w-full bg-red-50 text-red-600 hover:bg-red-100 py-2 rounded-lg transition-colors"
-                >
-                    Try Again
-                </button>
             </div>
           </div>
         </div>
@@ -252,12 +273,14 @@ const isGenerating = ref(false)
 const generationStatus = ref('')
 const error = ref('')
 const generationProgress = ref(0)
+const success = ref(false)
 
 const generatePresentation = async () => {
   if (!prompt.value.trim()) return
 
   try {
     isGenerating.value = true
+    success.value = false
     generationStatus.value = 'Initializing presentation generation...'
     error.value = ''
     generationProgress.value = 10
@@ -275,18 +298,22 @@ const generatePresentation = async () => {
 
         if (statusData.status === 'Completed') {
           clearInterval(interval)
-          generationStatus.value = 'Presentation generated successfully!'
           generationProgress.value = 100
           isGenerating.value = false
+          success.value = true
+          generationStatus.value = 'Presentation generated successfully!'
           
+          // Wait longer to show success state
           setTimeout(async () => {
+            success.value = false
             if (statusData.presentationId) {
               await navigateTo(`/presentation/${statusData.presentationId}`)
             }
-          }, 1500)
+          }, 2000)
         } else if (statusData.status === 'Failed') {
           clearInterval(interval)
           isGenerating.value = false
+          success.value = false
           error.value = 'Presentation generation encountered an issue.'
         } else {
           generationStatus.value = 'Crafting your AI-powered slides...'
@@ -295,6 +322,7 @@ const generatePresentation = async () => {
         console.error('Error checking status:', error)
         error.value = 'Connection lost. Please try again.'
         isGenerating.value = false
+        success.value = false
         clearInterval(interval)
       }
     }, 5000)
@@ -303,6 +331,7 @@ const generatePresentation = async () => {
     console.error('Presentation generation failed:', error)
     error.value = 'Failed to initiate presentation generation.'
     isGenerating.value = false
+    success.value = false
   }
 }
 
