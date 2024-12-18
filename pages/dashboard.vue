@@ -555,7 +555,7 @@ const exportToPng = async (id, title) => {
         const url = window.URL.createObjectURL(blob)
         const link = document.createElement('a')
         link.href = url
-        link.download = `${title}.png`
+        link.download = `${title}.zip`
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
