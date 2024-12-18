@@ -4,6 +4,7 @@ import { join } from 'path'
 import { useStorage } from '#imports'
 import { v4 as uuidv4 } from 'uuid'
 import { exportJobs } from '../export-status/[jobId].get'
+import fs from 'fs' // Import fs module
 
 async function startExportProcess(jobId: string, id: string) {
   try {
@@ -18,6 +19,11 @@ async function startExportProcess(jobId: string, id: string) {
     const slidesPath = join(presentationDir, 'slides.md')
     const outputPath = join(presentationDir, 'presentation.pdf')
 
+    // Check if the slides.md file exists
+    if (!fs.existsSync(slidesPath)) {
+      throw new Error('Slides file not found: Error 99')
+    }
+
     console.log('Exporting presentation to PDF...')
     console.log('Slides path:', slidesPath)
     console.log('Output path:', outputPath)
@@ -28,16 +34,16 @@ async function startExportProcess(jobId: string, id: string) {
       'export',
       slidesPath,
       '--output',
-      outputPath
+      outputPath,
     ], {
       cwd: process.cwd(),
       stdio: 'pipe',
       env: {
         ...process.env,
-        NODE_ENV: 'production'
-      }
+        NODE_ENV: 'production',
+      },
     })
-    
+
     console.log('Slidev export output:', result.stdout)
     if (result.stderr) {
       console.error('Slidev export stderr:', result.stderr)
@@ -57,14 +63,14 @@ async function startExportProcess(jobId: string, id: string) {
 }
 
 export default defineEventHandler(async (event) => {
-  const jobId = uuidv4();
-  const id = event.context.params.id;
+  const jobId = uuidv4()
+  const id = event.context.params.id
 
   if (!id) {
     throw createError({
       statusCode: 400,
       message: 'Presentation ID is required'
-    });
+    })
   }
 
   try {
@@ -72,30 +78,30 @@ export default defineEventHandler(async (event) => {
     exportJobs[jobId] = { 
       status: 'Processing',
       presentationId: id
-    };
+    }
 
     // Start the export process asynchronously
     startExportProcess(jobId, id).catch(error => {
-      console.error('Unhandled export error:', error);
+      console.error('Unhandled export error:', error)
       exportJobs[jobId] = { 
         status: 'Failed', 
         error: error.message,
         presentationId: id
-      };
-    });
+      }
+    })
     
     // Return job ID immediately
-    return { jobId, status: 'Processing' };
+    return { jobId, status: 'Processing' }
   } catch (error: any) {
     console.error('PDF export error:', error)
     exportJobs[jobId] = { 
       status: 'Failed', 
       error: error.message,
       presentationId: id
-    };
+    }
     throw createError({
       statusCode: 500,
       message: error.message || 'Failed to export presentation'
     })
   }
-});
+})
