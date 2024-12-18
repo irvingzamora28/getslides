@@ -18,6 +18,16 @@ RUN apt-get update && apt-get install -y \
     libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
+# Define build-time variables
+ARG SUPABASE_URL
+ARG SUPABASE_KEY
+ARG OPENAI_API_KEY
+
+# Set environment variables
+ENV SUPABASE_URL=$SUPABASE_URL
+ENV SUPABASE_KEY=$SUPABASE_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+
 # Set the working directory
 WORKDIR /app
 
