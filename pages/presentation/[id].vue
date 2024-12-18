@@ -116,11 +116,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, computed, inject } from 'vue';
 import { usePresentationsStore } from '~/stores/presentations'
-import { useToast } from '~/composables/useToast'
+import Toast from 'primevue/toast';
 
 const route = useRoute()
 const store = usePresentationsStore()
+const toast = inject('toast'); // Inject the toast reference
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -148,11 +150,18 @@ function startPresentation() {
   window.open(`/presentations/${route.params.id}/index.html`, '_blank')
 }
 
+const showToast = (severity, summary, detail) => {
+  if (toast.value) {
+    toast.value.add({ severity, summary, detail, life: 1000 });
+  } else {
+    console.error('Toast reference is not set.');
+  }
+};
+
 function copyContent() {
   if (presentation.value?.content) {
     navigator.clipboard.writeText(presentation.value.content)
-    const { success } = useToast()
-    success('Content copied to clipboard')
+    showToast('secondary', 'Copied!', 'Content copied to clipboard')
   }
 }
 </script>

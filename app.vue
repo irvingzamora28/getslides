@@ -123,7 +123,7 @@
     </header>
 
     <main class="flex-grow">
-      <Toast />
+      <Toast ref="toast" />
       <NuxtPage class="animate-fadeIn" />
     </main>
 
@@ -148,8 +148,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, provide } from 'vue'
 import { useRouter } from 'vue-router'
+import Toast from 'primevue/toast';
+
+const toast = ref(null);
+provide('toast', toast); // Provide the toast reference
 
 const user = useSupabaseUser()
 const client = useSupabaseClient()

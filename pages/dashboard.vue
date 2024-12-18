@@ -290,12 +290,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { usePresentationsStore } from '~/stores/presentations'
-import { useToast } from 'vue-toastification'
+import { ref, onMounted } from 'vue';
+import { usePresentationsStore } from '~/stores/presentations';
+import Toast from 'primevue/toast';
 
-const toast = useToast()
-const store = usePresentationsStore()
+const toast = inject('toast'); // Inject the toast reference
+
+const store = usePresentationsStore();
 const prompt = ref('')
 const isGenerating = ref(false)
 const generationStatus = ref('')
@@ -303,6 +304,11 @@ const error = ref('')
 const generationProgress = ref(0)
 const success = ref(false)
 const isExporting = ref({ pdf: false, pptx: false, png: false })  // Track export status for each format
+
+
+const showToast = (severity, summary, detail) => {
+  toast.value.add({ severity, summary, detail, life: 3000 });
+};
 
 const generatePresentation = async () => {
   if (!prompt.value.trim()) return
@@ -370,7 +376,7 @@ const resetError = () => {
 
 const exportToPdf = async (id, title) => {
   if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
-    toast.info('An export is already in progress')
+    showToast('info', 'Export in progress', 'Please wait until the current export is complete.')
     return
   }
 
@@ -411,7 +417,7 @@ const exportToPdf = async (id, title) => {
         window.URL.revokeObjectURL(url)
 
         isExporting.value.pdf = false
-        toast.success('PDF exported successfully')
+        showToast('success', 'PDF exported successfully', 'Your PDF has been downloaded.')
         return true
       } else if (statusData.status === 'Failed') {
         throw new Error(statusData.error || 'Export failed')
@@ -430,20 +436,20 @@ const exportToPdf = async (id, title) => {
         clearInterval(interval)
         isExporting.value.pdf = false
         console.error('Error checking export status:', error)
-        toast.error(error.message || 'Failed to export PDF')
+        showToast('error', 'Failed to export PDF', error.message || 'Failed to export PDF')
       }
     }, 2000)
 
   } catch (error) {
     console.error('Error exporting PDF:', error)
     isExporting.value.pdf = false
-    toast.error(error.message || 'Failed to export PDF')
+    showToast('error', 'Failed to export PDF', error.message || 'Failed to export PDF')
   }
 }
 
 const exportToPptx = async (id, title) => {
   if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
-    toast.info('An export is already in progress')
+    showToast('info', 'Export in progress', 'Please wait until the current export is complete.')
     return
   }
 
@@ -484,7 +490,7 @@ const exportToPptx = async (id, title) => {
         window.URL.revokeObjectURL(url)
 
         isExporting.value.pptx = false
-        toast.success('PPTX exported successfully')
+        showToast('success', 'PPTX exported successfully', 'Your PPTX has been downloaded.')
         return true
       } else if (statusData.status === 'Failed') {
         throw new Error(statusData.error || 'Export failed')
@@ -503,20 +509,20 @@ const exportToPptx = async (id, title) => {
         clearInterval(interval)
         isExporting.value.pptx = false
         console.error('Error checking PPTX export status:', error)
-        toast.error(error.message || 'Failed to export PPTX')
+        showToast('error', 'Failed to export PPTX', error.message || 'Failed to export PPTX')
       }
     }, 2000)
 
   } catch (error) {
     console.error('Error exporting PPTX:', error)
     isExporting.value.pptx = false
-    toast.error(error.message || 'Failed to export PPTX')
+    showToast('error', 'Failed to export PPTX', error.message || 'Failed to export PPTX')
   }
 }
 
 const exportToPng = async (id, title) => {
   if (isExporting.value.pdf || isExporting.value.pptx || isExporting.value.png) {
-    toast.info('An export is already in progress')
+    showToast('info', 'Export in progress', 'Please wait until the current export is complete.')
     return
   }
 
@@ -556,7 +562,7 @@ const exportToPng = async (id, title) => {
         window.URL.revokeObjectURL(url)
 
         isExporting.value.png = false
-        toast.success('PNG exported successfully')
+        showToast('success', 'PNG exported successfully', 'Your PNG has been downloaded.')
         return true
       } else if (statusData.status === 'Failed') {
         throw new Error(statusData.error || 'Export failed')
@@ -575,14 +581,14 @@ const exportToPng = async (id, title) => {
         clearInterval(interval)
         isExporting.value.png = false
         console.error('Error checking PNG export status:', error)
-        toast.error(error.message || 'Failed to export PNG')
+        showToast('error', 'Failed to export PNG', error.message || 'Failed to export PNG')
       }
     }, 2000)
 
   } catch (error) {
     console.error('Error exporting PNG:', error)
     isExporting.value.png = false
-    toast.error(error.message || 'Failed to export PNG')
+    showToast('error', 'Failed to export PNG', error.message || 'Failed to export PNG')
   }
 }
 
