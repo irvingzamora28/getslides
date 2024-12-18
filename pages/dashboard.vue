@@ -249,14 +249,15 @@
                 <Icon name="material-symbols:download" class="mr-1" />
                 {{ isExporting.pdf ? 'Exporting...' : 'PDF' }}
               </button>
-              <button 
+              <!-- Hide for now the pptx export as is not available -->
+              <!-- <button 
                 @click="exportToPptx(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
                 :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
               >
                 <Icon name="material-symbols:download" class="mr-1" />
                 {{ isExporting.pptx ? 'Exporting...' : 'PPTX' }}
-              </button>
+              </button> -->
               <button 
                 @click="exportToPng(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
