@@ -47,6 +47,22 @@ function cleanMarkdownContent(content: string): string {
     }
   }
   
+  // Identify the first frontmatter section and clean the title
+  const frontmatterRegex = /^---\s*$/;
+  let insideFrontmatter = false;
+  for (let i = 0; i < cleanedLines.length; i++) {
+    const line = cleanedLines[i];
+    if (frontmatterRegex.test(line)) {
+      insideFrontmatter = !insideFrontmatter; // Toggle frontmatter state
+    }
+    if (insideFrontmatter && line.startsWith('title: ')) {
+      const title = line.replace(/^title: /, '').trim();
+      // Remove unwanted characters
+      const cleanedTitle = title.replace(/[#:\/\?*|<>]/g, '');
+      cleanedLines[i] = `title: ${cleanedTitle}`;
+    }
+  }
+  
   // Join lines back together
   return cleanedLines.join('\n').trim();
 }
@@ -71,6 +87,7 @@ export async function generateSlideContent(prompt: string) {
         8. Do not use image placeholders
         9. Do not use "Slide No X" as title
         10. Only use code snippets when is a software related presentation
+        11. Start the presentation with frontmatter that inclues: theme, title, date and transition 
         11. Include interactive content with 'v-click' animations.
         12. When you use a <div> element, inside you MUST only use html elements, no markdown formatting.
         13. Use transitions to create a dynamic and engaging presentation.
@@ -140,6 +157,17 @@ export async function generateSlideContent(prompt: string) {
         # Righ subtitle
 
         This shows on the right
+
+        Note: Only the first slide doesnt need a layout. The first slide should contain the following frontmatter:
+        ---
+        theme: default
+        background: https://cover.sli.dev
+        title: Presentation Title
+        date: Date
+        transition: fade-out
+        ---
+
+        The available themes are: default, bricks, seriph and dracula. (Choose one randomly)
 
         The speaker notes are placed at the end of each slide in the following format:
         <!--
