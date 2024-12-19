@@ -28,9 +28,27 @@ function cleanMarkdownContent(content: string): string {
   if (lines[lines.length - 1]?.trim().startsWith('```')) {
     lines = lines.slice(0, -1)
   }
+
+  // Clean up newlines between '---' markers
+  const cleanedLines: string[] = [];
+  let previousLineWasSeparator = false;
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    if (trimmedLine === '---') {
+      cleanedLines.push(trimmedLine);
+      previousLineWasSeparator = true;
+    } else {
+      if (previousLineWasSeparator && trimmedLine === '') {
+        // Skip empty lines after a separator
+        continue;
+      }
+      cleanedLines.push(line);
+      previousLineWasSeparator = false;
+    }
+  }
   
   // Join lines back together
-  return lines.join('\n').trim()
+  return cleanedLines.join('\n').trim();
 }
 
 export async function generateSlideContent(prompt: string) {
