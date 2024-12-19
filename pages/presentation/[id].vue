@@ -81,7 +81,7 @@
             <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
               <iframe
                 v-if="presentation.id"
-                :src="`/presentations/${presentation.id}/index.html`"
+                :src="`/presentations/${presentation.id}/`"
                 class="w-full aspect-video rounded-lg"
                 frameborder="0"
               ></iframe>
@@ -147,7 +147,7 @@ onMounted(async () => {
 
 function startPresentation() {
   // Open the presentation in a new window
-  window.open(`/presentations/${route.params.id}/index.html`, '_blank')
+  window.open(`/presentations/${route.params.id}/`, '_blank')
 }
 
 const showToast = (severity, summary, detail) => {
