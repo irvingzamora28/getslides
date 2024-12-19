@@ -45,17 +45,20 @@ export default defineEventHandler(async (event) => {
     const requestedFile = requestPath.replace(`/presentations/${id}/`, '')
     console.log('Requested File:', requestedFile);
     
-    const fullFilePath = join('public', requestedFile)
+    let fullFilePath = join('public', requestedFile)
     console.log('Full File Path:', fullFilePath)
 
+    // Check if the requested path is a directory
+    const statResult = await stat(fullFilePath);
+    if (statResult.isDirectory()) {
+      // Serve index.html if the requested path is a directory
+      fullFilePath = join(fullFilePath, 'index.html');
+    }
+
     // Check if file exists
-    try {
-      await stat(fullFilePath)
-    } catch {
-      throw createError({ 
-        statusCode: 404, 
-        message: `File not found: ${requestedFile}` 
-      })
+    const fileExists = await stat(fullFilePath);
+    if (!fileExists) {
+      throw createError({ statusCode: 404, message: 'File not found' });
     }
 
     // Set headers and stream the file
