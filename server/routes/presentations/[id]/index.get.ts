@@ -45,7 +45,7 @@ export default defineEventHandler(async (event) => {
     const requestedFile = requestPath.replace(`/presentations/${id}/`, '')
     console.log('Requested File:', requestedFile);
     
-    let fullFilePath = join('public', requestedFile)
+    let fullFilePath = join(process.cwd(), 'public', 'presentations', id, requestedFile)
     console.log('Full File Path:', fullFilePath)
 
     // Check if the requested path is a directory
