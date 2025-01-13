@@ -1,75 +1,69 @@
-# Nuxt Minimal Starter
+# GetSlides
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+GetSlides is a modern web application that automatically generates beautiful presentations using AI. Built with Nuxt.js and powered by Slidev, it allows users to create professional-looking slides from simple text prompts.
+
+## Features
+
+- AI-Powered Slide Generation
+- Beautiful, Modern Slide Designs
+- Real-time Preview
+- Responsive Design
+- Multiple Theme Support
+
+## Tech Stack
+
+- **Frontend**: Nuxt.js 3, Vue.js, TailwindCSS, PrimeVue
+- **Presentation Engine**: Slidev
+- **AI Integration**: OpenAI
+- **Authentication**: Supabase
+
+## Prerequisites
+
+- Node.js (Latest LTS version recommended)
+- bun, yarn, or pbun
 
 ## Setup
 
-Make sure to install dependencies:
+1. Install dependencies:
 
 ```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
+# Using bun
 bun install
+
+# Using pbun
+pbun install
+
+# Using yarn
+yarn install
 ```
 
-## Development Server
+2. Set up environment variables:
+   Create a `.env` file in the root directory with the following variables:
+   ```
+   OPENAI_API_KEY=your_openai_api_key
 
-Start the development server on `http://localhost:3000`:
+   SUPABASE_URL=your_supabase_url
+   SUPABASE_KEY=your_supabase_key
+   SUPABASE_DB_PASSWORD=your_supabase_db_password
+   ```
+
+3. Start the development server:
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
 bun run dev
 ```
 
-## Production
+The application will be available at `http://localhost:3000`
 
-Build the application for production:
+## Build for Production
 
 ```bash
-# npm
-npm run build
+# Generate static files
+bun run generate
 
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
+# Build for production
 bun run build
+
+# Start production server
+bun run start
 ```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
