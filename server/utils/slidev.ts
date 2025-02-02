@@ -11,6 +11,7 @@ export async function generateSlidevPresentation(id: string, title: string, cont
   const { data: slideData, error } = await supabase
     .from('slides')
     .insert([{
+      id: id,
       title,
       content,
       theme: {}
