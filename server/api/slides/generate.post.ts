@@ -54,7 +54,7 @@ async function startPresentationGeneration(prompt, jobId, event) {
     }
 
     // Generate Slidev presentation
-    const slidevResult = await generateSlidevPresentation(presentation.id, content, event)
+    const slidevResult = await generateSlidevPresentation(presentation.id, presentation.title, content, event)
     
     // Update presentation with Slidev details
     presentation.slidevPath = slidevResult.slidesPath

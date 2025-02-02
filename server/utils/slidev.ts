@@ -4,15 +4,14 @@ import { execa } from 'execa'
 import { existsSync } from 'fs'
 import { supabase } from '~/server/utils/supabase'
 
-export async function generateSlidevPresentation(id: string, content: string, event: any) {
+export async function generateSlidevPresentation(id: string, title: string, content: string, event: any) {
   console.log('Starting Slidev presentation generation...');
-  console.log("Content:", content);
   
   // Save slides to Supabase database
   const { data: slideData, error } = await supabase
     .from('slides')
     .insert([{
-      title: 'Untitled Presentation',
+      title,
       content,
       theme: {}
     }])

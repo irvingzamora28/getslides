@@ -32,26 +32,38 @@ export default defineEventHandler(async (event) => {
         slides (id, title, created_at, content)
       `)
       .eq('user_id', user.id)
-
+        
     if (error) throw error
     if (!data) return []
 
-    // Safe data processing with type guards
+    // Transform the data into presentations
     const presentations = data
-      .filter(item => item.slides?.length)
-      .map(item => {
-        const slide = item.slides[0]
-        if (!slide?.id) return null
+      .map(userSlide => {
+        console.log('Processing userSlide:', userSlide);
         
-        return {
+        // Access the slides property directly
+        const slide = userSlide.slides;
+        console.log('Processing slide:', slide);
+        
+        if (!slide?.id) {
+          console.log('No valid slide data found');
+          return null;
+        }
+
+        const presentation = {
           id: slide.id,
           title: slide.title || 'Untitled Presentation',
           content: slide.content || '',
-          createdAt: slide.created_at || new Date().toISOString()
-        }
+          createdAt: slide.created_at || new Date().toISOString(),
+          status: 'completed'
+        };
+
+        console.log('Created presentation:', presentation);
+        return presentation;
       })
       .filter(Boolean) // Remove any null entries
-
+      console.log('Presentations:', presentations);
+      
     return presentations
   } catch (error: any) {
     console.error('API Error:', error)
