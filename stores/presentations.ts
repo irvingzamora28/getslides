@@ -22,10 +22,9 @@ export const usePresentationsStore = defineStore('presentations', {
       this.error = null
       try {
         const response = await $fetch('/api/slides/list')
-        console.log('Response straight up:', response);
         
         if (response) {
-          console.log('Fetched presentations:', JSON.stringify(response, null, 2));
+          console.log('Fetched presentations correctly');
         } else {
           console.log('Fetched presentations: No response received');
         }

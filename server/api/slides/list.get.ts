@@ -39,12 +39,8 @@ export default defineEventHandler(async (event) => {
     // Transform the data into presentations
     const presentations = data
       .map(userSlide => {
-        console.log('Processing userSlide:', userSlide);
-        
         // Access the slides property directly
         const slide = userSlide.slides;
-        console.log('Processing slide:', slide);
-        
         if (!slide?.id) {
           console.log('No valid slide data found');
           return null;
@@ -58,11 +54,9 @@ export default defineEventHandler(async (event) => {
           status: 'completed'
         };
 
-        console.log('Created presentation:', presentation);
         return presentation;
       })
       .filter(Boolean) // Remove any null entries
-      console.log('Presentations:', presentations);
       
     return presentations
   } catch (error: any) {
