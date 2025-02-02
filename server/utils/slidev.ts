@@ -2,10 +2,47 @@ import { writeFile, mkdir, readdir, cp } from 'fs/promises'
 import { join, basename } from 'path'
 import { execa } from 'execa'
 import { existsSync } from 'fs'
+import { supabase } from '~/server/utils/supabase'
 
-export async function generateSlidevPresentation(id: string, content: string) {
+export async function generateSlidevPresentation(id: string, content: string, event: any) {
   console.log('Starting Slidev presentation generation...');
+  console.log("Content:", content);
+  
+  // Save slides to Supabase database
+  const { data: slideData, error } = await supabase
+    .from('slides')
+    .insert([{
+      title: 'Untitled Presentation',
+      content,
+      theme: {}
+    }])
+    .select()
 
+  if (error) throw error
+  
+  const slideId = slideData[0].id
+
+  // Ensure the user is authenticated and available in the event context
+  const user = event.context.user;
+  console.log('User:', user);
+
+
+  if (!user || !user.id) {
+    throw new Error('User is not authenticated or user ID is null');
+  }
+
+  const userId = user.id;
+  console.log('User ID:', userId);
+
+  // Link slide to user
+  const { error: userSlideError } = await supabase
+    .from('user_slides')
+    .insert({
+      user_id: userId,
+      slide_id: slideId
+    })
+
+  if (userSlideError) throw userSlideError
 
   // Ensure presentations directory exists
   const presentationDir = join(process.cwd(), 'storage', 'presentations', id);

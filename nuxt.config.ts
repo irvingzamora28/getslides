@@ -68,7 +68,16 @@ export default defineNuxtConfig({
     },
     // Add static file serving for presentations
     routeRules: {
-      '/presentations/**': { static: true, prerender: true }
+      '/presentations/**': { static: true, prerender: true },
+      '/dashboard': { middleware: ['auth'] },
+     '/api/**': {
+      middleware: ['api-auth'],
+      cors: true,
+      headers: {
+        'Access-Control-Allow-Headers': 'authorization',
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
     }
   },
   app: {

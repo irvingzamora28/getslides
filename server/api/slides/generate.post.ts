@@ -7,10 +7,15 @@ import { jobs } from './jobs'; // Import the shared jobs object
 
 export default defineEventHandler(async (event) => {
   try {
-    const { prompt } = await readBody(event)
+    const body = await readBody(event)
+    console.log('generate.post.ts - Received body:', body);
     
-    if (!prompt) {
-      throw new Error('Prompt is required')
+    const parsedBody = JSON.parse(body);
+    const prompt = parsedBody?.prompt;
+    console.log('generate.post.ts - Extracted prompt:', prompt);
+    
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('Prompt is required and must be a string')
     }
 
     const jobId = uuidv4(); // Generate a unique job ID
@@ -18,19 +23,21 @@ export default defineEventHandler(async (event) => {
     console.log('generate.post.ts - Before Start Presentation Generation - Job ID:', jobId);
     
     // Start the presentation generation process
-    startPresentationGeneration(prompt, jobId); // Pass jobId to track status
+    await startPresentationGeneration(prompt, jobId, event); // Make this await the promise
 
     return { jobId, status: 'Processing' };
   } catch (error: any) {
+    console.error('Error in generate.post.ts:', error);
+    console.error('Error stack:', error.stack);
     throw createError({
       statusCode: 500,
-      message: error.message
+      message: `Generation failed: ${error.message}`
     })
   }
 })
 
 // Function to start the generation process
-async function startPresentationGeneration(prompt, jobId) {
+async function startPresentationGeneration(prompt, jobId, event) {
   try {
     console.log('Starting presentation generation... (PROMPT: ', prompt, ')');
     // Generate slide content
@@ -47,7 +54,7 @@ async function startPresentationGeneration(prompt, jobId) {
     }
 
     // Generate Slidev presentation
-    const slidevResult = await generateSlidevPresentation(presentation.id, content)
+    const slidevResult = await generateSlidevPresentation(presentation.id, content, event)
     
     // Update presentation with Slidev details
     presentation.slidevPath = slidevResult.slidesPath

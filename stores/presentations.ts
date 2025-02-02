@@ -48,15 +48,34 @@ export const usePresentationsStore = defineStore('presentations', {
     async generatePresentation(prompt: string) {
       this.loading = true
       this.error = null
+      console.log('Generating presentation with prompt:', prompt);
+      
       try {
-        const response = await $fetch('/api/slides/generate', {
+        if (!prompt?.trim()) {
+          throw new Error('Prompt is required')
+        }
+
+        const trimmedPrompt = prompt.trim()
+        console.log('Sending request with prompt:', trimmedPrompt)
+
+        const { data, error } = await useFetch('/api/slides/generate', {
           method: 'POST',
-          body: { prompt }
+          body: { prompt: trimmedPrompt }
         })
-        console.log('Generated presentation:', JSON.parse(JSON.stringify(response)));
+
+        if (error.value) {
+          throw new Error(error.value.message || 'Failed to generate presentation')
+        }
+
+        if (!data.value) {
+          throw new Error('No response data received')
+        }
+
+        console.log('Generated presentation:', data.value);
         
-        if (response) {
-          this.currentPresentation = response as Presentation
+        const result = data.value
+        if (result) {
+          this.currentPresentation = result as Presentation
           return this.currentPresentation
         } else {
           throw new Error('Failed to generate presentation')

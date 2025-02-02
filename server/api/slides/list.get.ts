@@ -1,68 +1,63 @@
 import { defineEventHandler, createError } from 'h3'
-import { useStorage } from '#imports'
-import { existsSync } from 'fs'
-import { join } from 'path'
+import { supabase } from '~/server/utils/supabase'
 
-export default defineEventHandler(async () => {
+interface Slide {
+  id: string
+  title: string
+  created_at: string
+  content: string
+}
+
+interface UserSlide {
+  slide_id: string
+  slides: Slide[]
+}
+
+// ~/server/api/slides/list.get.ts
+export default defineEventHandler(async (event) => {
   try {
-    const storage = useStorage('presentations')
-    const keys = await storage.getKeys()
+    const user = event.context.user
     
-    const presentations = await Promise.all(
-      keys.map(async (key) => {
-        try {
-          const presentation = await storage.getItem(key)
-          
-          console.log('Processing presentation:', {
-            key,
-            presentation: presentation ? {
-              id: presentation.id,
-              title: presentation.title,
-              createdAt: presentation.createdAt
-            } : null
-          })
+    if (!user?.id) {
+      throw createError({
+        statusCode: 401,
+        statusMessage: 'User context missing'
+      })
+    }
 
-          // Validate presentation
-          if (!presentation || !presentation.id) {
-            console.warn(`Invalid presentation for key: ${key}`)
-            return null
-          }
+    const { data, error } = await supabase
+      .from('user_slides')
+      .select(`
+        slide_id,
+        slides (id, title, created_at, content)
+      `)
+      .eq('user_id', user.id)
 
-          // Check if presentation files exist
-          const presentationPath = join(process.cwd(), 'public', 'presentations', presentation.id)
-          const indexPath = join(presentationPath, 'index.html')
-          
-          if (!existsSync(presentationPath) || !existsSync(indexPath)) {
-            console.warn(`Presentation files missing for id: ${presentation.id}`)
-            // Remove invalid presentation from storage
-            await storage.removeItem(key)
-            return null
-          }
+    if (error) throw error
+    if (!data) return []
 
-          return presentation
-        } catch (error) {
-          console.error(`Error processing presentation key ${key}:`, error)
-          return null
+    // Safe data processing with type guards
+    const presentations = data
+      .filter(item => item.slides?.length)
+      .map(item => {
+        const slide = item.slides[0]
+        if (!slide?.id) return null
+        
+        return {
+          id: slide.id,
+          title: slide.title || 'Untitled Presentation',
+          content: slide.content || '',
+          createdAt: slide.created_at || new Date().toISOString()
         }
       })
-    )
-    
-    // Filter out null values and sort
-    const validPresentations = presentations
-      .filter(p => p !== null)
-      .sort((a: any, b: any) => {
-        // Handle potential date parsing issues
-        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0
-        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0
-        return dateB - dateA
-      })
+      .filter(Boolean) // Remove any null entries
 
-    console.log(`Returning ${validPresentations.length} valid presentations`)
-    return validPresentations
+    return presentations
   } catch (error: any) {
-    console.error('Error in presentations list:', error)
+    console.error('API Error:', error)
     throw createError({
-      statusCode: 500,
+      statusCode: error.statusCode || 500,
+      statusMessage: error.statusMessage || 'Internal Server Error',
       message: error.message
     })
   }

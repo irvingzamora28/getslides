@@ -326,8 +326,7 @@ const generatePresentation = async () => {
 
     const interval = setInterval(async () => {
       try {
-        const statusResponse = await fetch(`/api/slides/status/${jobId}`)
-        const statusData = await statusResponse.json()
+        const statusData = await $fetch(`/api/slides/status/${jobId}`)
 
         // Update progress dynamically
         generationProgress.value = Math.min(generationProgress.value + 20, 90)
