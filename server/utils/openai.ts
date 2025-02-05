@@ -70,7 +70,7 @@ function cleanMarkdownContent(content: string): string {
   return cleanedLines.join('\n').trim();
 }
 
-export async function generateSlideContent(prompt: string) {
+export async function generateSlideContent(prompt: string, numSlides: number = 10) {
   try {
     const openai = createOpenAIClient()
     const config = useRuntimeConfig()
@@ -87,7 +87,7 @@ export async function generateSlideContent(prompt: string) {
     messages: [
       {
         role: 'system',
-        content: `You are a presentation content generator. Generate a Markdown presentation using Slidev format.
+        content: `You are a presentation content generator. Generate exactly ${numSlides} slides using Slidev format.
         Follow these rules:
         1. Use clear and concise language
         2. Include speaker notes where appropriate
@@ -98,95 +98,95 @@ export async function generateSlideContent(prompt: string) {
         7. Do not wrap the content in markdown code blocks
         8. Do not use image placeholders
         9. Do not use "Slide No X" as title
-        10. Only use code snippets when is a software related presentation
-        11. Start the presentation with frontmatter that inclues: theme, title, date and transition 
-        11. Include interactive content with 'v-click' animations.
-        12. When you use a <div> element, inside you MUST only use html elements, no markdown formatting.
-        13. Use transitions to create a dynamic and engaging presentation.
-        14. Only use <div> elements when you use 'v-click', otherwise use normal markdown.
-        15. Where you use markdown use ** to highlight important words or concepts.
-        16. Use either of these layouts on each slide: (default, center, fact, full, two-cols, two-cols-header). Use them interchangably depending on the content.
+        10. Only use code snippets when is a software related presentation (Anything that is not software related, do not use code snippets)
+        11. Start the presentation with frontmatter that includes:
+            - theme: (default, seriph, bricks, or dracula)
+            - title: Presentation Title
+            - date: Current date (YYYY-MM-DD)
+            - transition: (fade-out, slide-up, or zoom-in)
+        12. Include interactive content with 'v-click' animations
+        13. When using <div> elements for v-click, only use HTML formatting inside
+        14. Use transitions between slides
+        15. Use appropriate layouts (default, center, two-cols, etc)
+        16. Maintain consistent heading hierarchy
 
-        The 'v-click' elements are used to display elements at a time, giving the users the impression of an interactive presentation.
-        Use 'v-clik' when you list items (But do not overuse in all slidse).
-        You can add \`v-click\` to elements to add a click animation.
+        Example Structure 1:
+        ---
+        theme: seriph
+        title: Modern Web Development
+        date: 2024-03-15
+        transition: slide-up
+        ---
 
-        The following example shows how to use \`v-click\`:
+        # Core Principles
 
-        These are the elements that will be animated:
         <div v-click>
-          <b>Element 1</b> Some more text.
+          <h2>1. Performance</h2>
+          <p>Optimize critical rendering path</p>
         </div>
+
         <div v-click>
-          <b>Element 2</b> Some more text.
+          <h2>2. Accessibility</h2>
+          <p>Follow WCAG guidelines</p>
         </div>
-        <div v-click>
-          <b>Element 3</b> Some more text.
-        </div>
-        <div v-click>This shows up when you click the slide.</div>
 
-        The transitions are placed in the beginning of each slide in the following format:
-        ---
-        transition: fade-out
-        ---
-
-        The layout is placed in the beginning of each slide after the transitions in the following format:
-        ---
-        transition: fade-out
-        layout: center
-        ---
-
-        The two-cols and two-cols-header layouts are used as follows:
+        <!--
+        Speaker Notes:
+        - Emphasize performance metrics
+        - Discuss accessibility auditing tools
+        -->
 
         ---
         layout: two-cols
+        transition: zoom-in
         ---
 
-        # Left
-
-        This shows on the left
-
-        ::right::
-
-        # Right
-
-        This shows on the right
-
-        ---
-        layout: two-cols-header
-        ---
-
-        # Title
+        # Client-Side vs Server-Side
 
         ::left::
-
-        # Left subtitle
-
-        This shows on the left
+        **Client-Side**
+        - React/Vue components
+        - Dynamic updates
 
         ::right::
+        **Server-Side**
+        - API endpoints
+        - Database interactions
 
-        # Righ subtitle
-
-        This shows on the right
-
-        Note: Only the first slide doesnt need a layout. The first slide should contain the following frontmatter:
+        Example Structure 2:
         ---
-        theme: default
-        background: https://cover.sli.dev
-        title: Presentation Title
-        date: Date
+        theme: dracula
+        title: DevOps Pipeline
+        layout: center
+        ---
+
+        # CI/CD Flow
+
+        \`\`\`mermaid
+        graph LR
+          A[Code Commit] --> B[Build]
+          B --> C[Test]
+          C --> D[Deploy]
+        \`\`\`
+
+        <!--
+        Speaker Notes:
+        - Explain each pipeline stage
+        - Show failure recovery process
+        -->
+
+        ---
         transition: fade-out
         ---
 
-        The available themes are: default, bricks, seriph and dracula. (Choose one randomly)
+        # Key Metrics
 
-        The speaker notes are placed at the end of each slide in the following format:
-        <!--
-        Note 1
-        Note 2
-        -->
-        ---
+        <div v-click>
+          Deployment frequency
+        </div>
+        <div v-click>
+          Lead time for changes
+        </div>
         `
       },
       {
@@ -201,11 +201,30 @@ export async function generateSlideContent(prompt: string) {
     const content = completion.choices[0].message.content
     console.log('Inside openai.ts@generateSlideContent - After Generating slide content and before returning it...');
     console.log('Generated slide content:', content);
+
+    // Validate generated content
     if (!content) {
       throw new Error('No content generated by OpenAI')
     }
+
+    if (!content.includes('---')) {
+      throw new Error('Missing frontmatter section')
+    }
+
+    if (!content.match(/^title:\s+.+$/m)) {
+      throw new Error('Missing title in frontmatter')
+    }
+
+    // Validate slide count
+    const slideCount = (content.match(/^---$/gm) || []).length
+    console.log('Slide count:', slideCount);
     
-    return cleanMarkdownContent(content)
+    // if (slideCount !== numSlides) {
+    //   throw new Error(`Generated ${slideCount} slides instead of requested ${numSlides}`)
+    // }
+
+    const cleanedContent = cleanMarkdownContent(content)
+    return cleanedContent
   } catch (error: any) {
     console.error('Error in generateSlideContent:', error);
     if (error.response) {
