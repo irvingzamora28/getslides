@@ -184,6 +184,8 @@
         </div>
       </Teleport>
 
+
+
       <!-- Stats Section -->
       <div 
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -227,14 +229,15 @@
         </div>
         <ul v-else-if="store.presentations.length" class="space-y-4">
           <li 
-            v-for="presentation in store.presentations" 
-            :key="presentation.id" 
-            class="bg-white hover:cursor-pointer dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-all duration-300 flex items-center justify-between"
-            v-motion
-            :initial="{ opacity: 0, x: -20 }"
-            :enter="{ opacity: 1, x: 0, transition: { duration: 400 } }"
-            @click="navigateTo(`/presentation/${presentation.id}`)"
-          >
+              v-for="presentation in store.presentations" 
+              :key="presentation.id" 
+              class="relative bg-white hover:cursor-pointer dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-all duration-300 flex items-center justify-between"
+              :class="{ 'z-50': presentation.showMenu }"
+              v-motion
+              :initial="{ opacity: 0, x: -20 }"
+              :enter="{ opacity: 1, x: 0, transition: { duration: 400 } }"
+              @click="navigateTo(`/presentation/${presentation.id}`)"
+            >
             <div>
               <h3 class="font-bold text-gray-800 dark:text-gray-100">{{ presentation.title }}</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -242,36 +245,65 @@
               </p>
             </div>
             <div class="flex items-center space-x-2">
-              <button 
-                @click.stop="exportToPdf(presentation.id, presentation.title)"
-                :disabled="getExportState(presentation.id).pdf"
-                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
-              >
-                {{ getExportState(presentation.id).pdf ? 'Exporting...' : 'PDF' }}
-              </button>
-              <!-- Hide for now the pptx export as is not available -->
-              <!-- <button 
-                @click.stop="exportToPptx(presentation.id, presentation.title)"
-                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
-                :disabled="getExportState(presentation.id).pptx"
-              >
-                <Icon name="material-symbols:download" class="mr-1" />
-                {{ getExportState(presentation.id).pptx ? 'Exporting...' : 'PPTX' }}
-              </button> -->
-              <button 
-                @click.stop="exportToPng(presentation.id, presentation.title)"
-                :disabled="getExportState(presentation.id).png"
-                class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
-              >
-                {{ getExportState(presentation.id).png ? 'Exporting...' : 'PNG' }}
-              </button>
-              <button 
-                @click.stop="navigateTo(`/presentation/${presentation.id}`)"
-                class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center space-x-1 hover:underline"
-              >
-                <Icon name="material-symbols:visibility" class="mr-1" />
-                View
-              </button>
+              <!-- Desktop buttons - hidden on mobile -->
+              <div class="hidden md:flex items-center space-x-2">
+                <button 
+                  @click.stop="exportToPdf(presentation.id, presentation.title)"
+                  :disabled="getExportState(presentation.id).pdf"
+                  class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+                >
+                  {{ getExportState(presentation.id).pdf ? 'Exporting...' : 'PDF' }}
+                </button>
+                <button 
+                  @click.stop="exportToPng(presentation.id, presentation.title)"
+                  :disabled="getExportState(presentation.id).png"
+                  class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
+                >
+                  {{ getExportState(presentation.id).png ? 'Exporting...' : 'PNG' }}
+                </button>
+                <button 
+                  @click.stop="navigateTo(`/presentation/${presentation.id}`)"
+                  class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center space-x-1 hover:underline"
+                >
+                  <Icon name="material-symbols:visibility" class="mr-1" />
+                  View
+                </button>
+              </div>
+              <!-- Mobile menu - shown only on mobile -->
+              <div class="relative md:hidden">
+                <button 
+                  @click.stop="toggleMenu(presentation)"
+                  class="p-1 text-gray-600 hover:text-gray-500 dark:text-gray-400 mobile-menu-trigger"
+                >
+                  <Icon name="material-symbols:more-vert" class="text-xl" />
+                </button>
+                <!-- Dropdown menu -->
+                <div 
+                  v-if="presentation.showMenu"
+                  class="absolute right-0 top-8 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-[100]"
+                >
+                  <button 
+                    @click.stop="exportPdfAndCloseMenu(presentation)"
+                    :disabled="getExportState(presentation.id).pdf"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {{ getExportState(presentation.id).pdf ? 'Exporting PDF...' : 'Export as PDF' }}
+                  </button>
+                  <button 
+                    @click.stop="exportPngAndCloseMenu(presentation)"
+                    :disabled="getExportState(presentation.id).png"
+                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    {{ getExportState(presentation.id).png ? 'Exporting PNG...' : 'Export as PNG' }}
+                  </button>
+                  <button 
+                    @click.stop="viewAndCloseMenu(presentation)"
+                    class="block w-full text-left px-4 py-2 text-sm text-indigo-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    View Presentation
+                  </button>
+                </div>
+              </div>
             </div>
           </li>
         </ul>
@@ -315,6 +347,38 @@ function getExportState(presentationId) {
 
 const showToast = (severity, summary, detail) => {
   toast.value.add({ severity, summary, detail, life: 3000 });
+};
+
+const toggleMenu = (presentation) => {
+  // Close all other menus first
+  store.presentations.forEach(p => {
+    if (p.id !== presentation.id) {
+      p.showMenu = false;
+    }
+  });
+  // Toggle the clicked menu
+  presentation.showMenu = !presentation.showMenu;
+};
+
+const closeAllMenus = () => {
+  store.presentations.forEach(p => {
+    p.showMenu = false;
+  });
+};
+
+const exportPdfAndCloseMenu = async (presentation) => {
+  await exportToPdf(presentation.id, presentation.title);
+  presentation.showMenu = false;
+};
+
+const exportPngAndCloseMenu = async (presentation) => {
+  await exportToPng(presentation.id, presentation.title);
+  presentation.showMenu = false;
+};
+
+const viewAndCloseMenu = (presentation) => {
+  presentation.showMenu = false;
+  navigateTo(`/presentation/${presentation.id}`);
 };
 
 const generatePresentation = async () => {
@@ -621,7 +685,14 @@ const exportToPng = async (id, title) => {
 }
 
 onMounted(() => {
-  store.fetchPresentations()
+  store.fetchPresentations();
+
+  // Add click outside listener
+  window.addEventListener('click', (e) => {
+    if (!e.target.closest('.mobile-menu-trigger')) {
+      closeAllMenus();
+    }
+  });
 })
 
 // Previous stats implementation

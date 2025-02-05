@@ -6,6 +6,7 @@ interface Presentation {
   content: string
   createdAt: string
   prompt: string
+  showMenu?: boolean
 }
 
 export const usePresentationsStore = defineStore('presentations', {
@@ -30,7 +31,10 @@ export const usePresentationsStore = defineStore('presentations', {
         }
         
         if (Array.isArray(response)) {
-          this.presentations = response as Presentation[]
+          this.presentations = response.map(presentation => ({
+            ...presentation,
+            showMenu: false
+          })) as Presentation[]
         } else {
           this.presentations = []
         }
