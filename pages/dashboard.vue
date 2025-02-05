@@ -268,6 +268,13 @@
                   <Icon name="material-symbols:visibility" class="mr-1" />
                   View
                 </button>
+                <button 
+                  @click.stop="deletePresentation(presentation.id)"
+                  class="text-sm text-red-600 hover:text-red-500 dark:text-red-400 flex items-center space-x-1 hover:underline"
+                >
+                  <Icon name="material-symbols:delete" class="mr-1" />
+                  Delete
+                </button>
               </div>
               <!-- Mobile menu - shown only on mobile -->
               <div class="relative md:hidden">
@@ -302,6 +309,12 @@
                   >
                     View Presentation
                   </button>
+                  <button 
+                    @click.stop="deletePresentation(presentation.id)"
+                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    Delete Presentation
+                  </button>
                 </div>
               </div>
             </div>
@@ -322,13 +335,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, inject } from 'vue';
 import { usePresentationsStore } from '~/stores/presentations';
 import Toast from 'primevue/toast';
 
 const toast = inject('toast'); // Inject the toast reference
 
-const store = usePresentationsStore();
+const store = usePresentationsStore()
 const prompt = ref('')
 const isGenerating = ref(false)
 const generationStatus = ref('')
@@ -339,47 +352,46 @@ const exportStates = ref(new Map())
 
 function getExportState(presentationId) {
   if (!exportStates.value.has(presentationId)) {
-    exportStates.value.set(presentationId, { pdf: false, pptx: false, png: false });
+    exportStates.value.set(presentationId, { pdf: false, pptx: false, png: false })
   }
-  return exportStates.value.get(presentationId);
+  return exportStates.value.get(presentationId)
 }
 
-
 const showToast = (severity, summary, detail) => {
-  toast.value.add({ severity, summary, detail, life: 3000 });
-};
+  toast.value.add({ severity, summary, detail, life: 3000 })
+}
 
 const toggleMenu = (presentation) => {
   // Close all other menus first
   store.presentations.forEach(p => {
     if (p.id !== presentation.id) {
-      p.showMenu = false;
+      p.showMenu = false
     }
-  });
+  })
   // Toggle the clicked menu
-  presentation.showMenu = !presentation.showMenu;
-};
+  presentation.showMenu = !presentation.showMenu
+}
 
 const closeAllMenus = () => {
   store.presentations.forEach(p => {
-    p.showMenu = false;
-  });
-};
+    p.showMenu = false
+  })
+}
 
 const exportPdfAndCloseMenu = async (presentation) => {
-  await exportToPdf(presentation.id, presentation.title);
-  presentation.showMenu = false;
-};
+  await exportToPdf(presentation.id, presentation.title)
+  presentation.showMenu = false
+}
 
 const exportPngAndCloseMenu = async (presentation) => {
-  await exportToPng(presentation.id, presentation.title);
-  presentation.showMenu = false;
-};
+  await exportToPng(presentation.id, presentation.title)
+  presentation.showMenu = false
+}
 
 const viewAndCloseMenu = (presentation) => {
-  presentation.showMenu = false;
-  navigateTo(`/presentation/${presentation.id}`);
-};
+  presentation.showMenu = false
+  navigateTo(`/presentation/${presentation.id}`)
+}
 
 const generatePresentation = async () => {
   if (!prompt.value.trim()) return
@@ -407,7 +419,7 @@ const generatePresentation = async () => {
           isGenerating.value = false
           success.value = true
           generationStatus.value = 'Presentation generated successfully!'
-          
+
           // Wait longer to show success state
           setTimeout(async () => {
             success.value = false
@@ -431,7 +443,6 @@ const generatePresentation = async () => {
         clearInterval(interval)
       }
     }, 5000)
-
   } catch (error) {
     console.error('Presentation generation failed:', error)
     error.value = 'Failed to initiate presentation generation.'
@@ -512,7 +523,6 @@ const exportToPdf = async (id, title) => {
         showToast('error', 'Failed to export PDF', error.message || 'Failed to export PDF')
       }
     }, 2000)
-
   } catch (error) {
     console.error('Error exporting PDF:', error)
     const state = getExportState(id)
@@ -592,14 +602,12 @@ const exportToPptx = async (id, title) => {
         showToast('error', 'Failed to export PPTX', error.message || 'Failed to export PPTX')
       }
     }, 2000)
-
   } catch (error) {
     console.error('Error exporting PPTX:', error)
     const state = getExportState(id)
     state.pptx = false
     showToast('error', 'Failed to export PPTX', error.message || 'Failed to export PPTX')
-  }
-  finally {
+  } finally {
     const state = getExportState(id)
     state.pptx = false
   }
@@ -672,7 +680,6 @@ const exportToPng = async (id, title) => {
         showToast('error', 'Failed to export PNG', error.message || 'Failed to export PNG')
       }
     }, 2000)
-
   } catch (error) {
     console.error('Error exporting PNG:', error)
     const state = getExportState(id)
@@ -684,15 +691,35 @@ const exportToPng = async (id, title) => {
   }
 }
 
-onMounted(() => {
-  store.fetchPresentations();
+const deletePresentation = async (id) => {
+  if (!confirm('Are you sure you want to delete this presentation?')) return
+  
+  try {
+    await $fetch('/api/presentations/delete', {
+      method: 'POST',
+      body: JSON.stringify({ id })
+    })
+    
+    // Remove the deleted presentation from the store
+    store.presentations = store.presentations.filter(p => p.id !== id)
+    
+    // Show a success toast notification
+    showToast('success', 'Presentation Deleted', 'The presentation has been deleted successfully.')
+  } catch (error) {
+    console.error('Delete failed:', error)
+    showToast('error', 'Delete Failed', 'Failed to delete presentation')
+  }
+}
 
-  // Add click outside listener
+onMounted(() => {
+  store.fetchPresentations()
+
+  // Add click outside listener to close mobile menus
   window.addEventListener('click', (e) => {
     if (!e.target.closest('.mobile-menu-trigger')) {
-      closeAllMenus();
+      closeAllMenus()
     }
-  });
+  })
 })
 
 // Previous stats implementation
