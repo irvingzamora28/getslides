@@ -229,10 +229,11 @@
           <li 
             v-for="presentation in store.presentations" 
             :key="presentation.id" 
-            class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-all duration-300 flex items-center justify-between"
+            class="bg-white hover:cursor-pointer dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-all duration-300 flex items-center justify-between"
             v-motion
             :initial="{ opacity: 0, x: -20 }"
             :enter="{ opacity: 1, x: 0, transition: { duration: 400 } }"
+            @click="navigateTo(`/presentation/${presentation.id}`)"
           >
             <div>
               <h3 class="font-bold text-gray-800 dark:text-gray-100">{{ presentation.title }}</h3>
@@ -242,7 +243,7 @@
             </div>
             <div class="flex items-center space-x-2">
               <button 
-                @click="exportToPdf(presentation.id, presentation.title)"
+                @click.stop="exportToPdf(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
                 :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
               >
@@ -251,7 +252,7 @@
               </button>
               <!-- Hide for now the pptx export as is not available -->
               <!-- <button 
-                @click="exportToPptx(presentation.id, presentation.title)"
+                @click.stop="exportToPptx(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
                 :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
               >
@@ -259,7 +260,7 @@
                 {{ isExporting.pptx ? 'Exporting...' : 'PPTX' }}
               </button> -->
               <button 
-                @click="exportToPng(presentation.id, presentation.title)"
+                @click.stop="exportToPng(presentation.id, presentation.title)"
                 class="text-sm text-gray-600 hover:text-gray-500 dark:text-gray-400 flex items-center space-x-1 hover:underline"
                 :disabled="isExporting.pdf || isExporting.pptx || isExporting.png"
               >
@@ -267,7 +268,7 @@
                 {{ isExporting.png ? 'Exporting...' : 'PNG' }}
               </button>
               <button 
-                @click="navigateTo(`/presentation/${presentation.id}`)"
+                @click.stop="navigateTo(`/presentation/${presentation.id}`)"
                 class="text-sm text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 flex items-center space-x-1 hover:underline"
               >
                 <Icon name="material-symbols:visibility" class="mr-1" />
